@@ -1,7 +1,11 @@
-//
-//  DateFormatter+Extension.swift
-//  Assignment Tracker
-//
-//  Created by KCEMAC10 on 18/11/26.
-//
+import Foundation
 
+extension Date {
+    var assignmentDate: String {
+        formatted(date: .abbreviated, time: .omitted)
+    }
+
+    var assignmentDateTime: String {
+        formatted(date: .abbreviated, time: .shortened)
+    }
+}

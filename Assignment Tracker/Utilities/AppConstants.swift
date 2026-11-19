@@ -1,7 +1,7 @@
-//
-//  AppConstants.swift
-//  Assignment Tracker
-//
-//  Created by KCEMAC10 on 18/11/26.
-//
+import Foundation
 
+enum AppConstants {
+    static let appName = "Assignment Tracker"
+    static let minimumPasswordLength = 8
+    static let maximumMarks = 100
+}

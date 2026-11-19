@@ -1,7 +1,34 @@
-//
-//  EditAssignmentView.swift
-//  Assignment Tracker
-//
-//  Created by KCEMAC10 on 18/11/26.
-//
+import SwiftUI
+import SwiftData
 
+struct EditAssignmentView: View {
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var viewModel: EditAssignmentViewModel
+    let assignment: Assignment
+
+    init(assignment: Assignment) {
+        self.assignment = assignment
+        _viewModel = StateObject(wrappedValue: EditAssignmentViewModel(assignment: assignment))
+    }
+
+    var body: some View {
+        NavigationStack {
+            AssignmentFormView(
+                title: $viewModel.title, subject: $viewModel.subject,
+                faculty: $viewModel.faculty, dueDate: $viewModel.dueDate,
+                marks: $viewModel.marks, notes: $viewModel.notes,
+                status: $viewModel.status, errorMessage: viewModel.errorMessage
+            )
+            .navigationTitle("Edit Assignment")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        if viewModel.save(assignment: assignment, context: context) { dismiss() }
+                    }
+                }
+            }
+        }
+    }
+}

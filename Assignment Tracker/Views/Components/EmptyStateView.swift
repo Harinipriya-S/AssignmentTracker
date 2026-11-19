@@ -1,7 +1,12 @@
-//
-//  EmptyStateView.swift
-//  Assignment Tracker
-//
-//  Created by KCEMAC10 on 18/11/26.
-//
+import SwiftUI
+
+struct EmptyStateView: View {
+    let title: String
+    let message: String
+
+    var body: some View {
+        ContentUnavailableView(title, systemImage: "tray", description: Text(message))
+            .frame(maxWidth: .infinity)
+    }
+}
 
