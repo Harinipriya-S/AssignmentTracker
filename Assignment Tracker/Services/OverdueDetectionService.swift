@@ -10,4 +10,3 @@ struct OverdueDetectionService {
         assignments.filter { isOverdue($0) }.sorted { $0.dueDate < $1.dueDate }
     }
 }
-

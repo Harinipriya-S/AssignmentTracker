@@ -1,51 +1,128 @@
+
 import SwiftUI
 import SwiftData
 
 struct AssignmentDetailView: View {
+
+    let selectedAssignment: Assignment
+    let userID: String
+
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+
     @StateObject private var viewModel = AssignmentDetailViewModel()
-    @State private var showingEdit = false
-    @State private var showingDeleteAlert = false
-    let assignment: Assignment
+    @State private var showEditView = false
 
     var body: some View {
-        Form {
-            Section("Assignment") {
-                LabeledContent("Title", value: assignment.title)
-                LabeledContent("Subject", value: assignment.subject)
-                LabeledContent("Faculty", value: assignment.faculty)
-                LabeledContent("Due date", value: assignment.dueDate.assignmentDateTime)
-                LabeledContent("Marks", value: "\(assignment.marks)")
-                LabeledContent("Status") {
-                    Picker("Status", selection: Binding(
-                        get: { assignment.status },
-                        set: { viewModel.updateStatus($0, for: assignment, context: context) }
-                    )) {
-                        ForEach(AssignmentStatus.allCases) { Text($0.rawValue).tag($0) }
+
+        Group {
+
+            if let assignment = viewModel.assignment {
+
+                Form {
+
+                    Section("Assignment Information") {
+
+                        LabeledContent("Title") {
+                            Text(assignment.title)
+                        }
+
+                        LabeledContent("Subject") {
+                            Text(String(describing: assignment.subject))
+                        }
+
+                        LabeledContent("Faculty") {
+                            Text(assignment.faculty)
+                        }
+
+                        LabeledContent("Due Date") {
+                            Text(
+                                assignment.dueDate.formatted(
+                                    date: .abbreviated,
+                                    time: .omitted
+                                )
+                            )
+                        }
+                    }
+
+                    Section("Submission Details") {
+
+                        LabeledContent("Marks") {
+                            Text(String(describing: assignment.marks))
+                        }
+
+                        LabeledContent("Status") {
+                            Text(String(describing: assignment.status))
+                        }
+
+                        LabeledContent("Notes") {
+                            Text(
+                                assignment.notes.isEmpty
+                                ? "No notes added"
+                                : assignment.notes
+                            )
+                        }
+                    }
+
+                    Section {
+
+                        Button(role: .destructive) {
+
+                            viewModel.deleteAssignment()
+                            dismiss()
+
+                        } label: {
+
+                            Label(
+                                "Delete Assignment",
+                                systemImage: "trash"
+                            )
+                        }
                     }
                 }
-                if !assignment.notes.isEmpty { Text(assignment.notes) }
-                if assignment.isOverdue { Label("This assignment is overdue", systemImage: "exclamationmark.triangle").foregroundStyle(.red) }
+                .toolbar {
+
+                    ToolbarItem(placement: .topBarTrailing) {
+
+                        Button {
+
+                            showEditView = true
+
+                        } label: {
+
+                            Text("Edit")
+                                .fontWeight(.semibold)
+                        }
+                    }
+                }
+                .sheet(isPresented: $showEditView) {
+
+                    EditAssignmentView(
+                        assignment: assignment,
+                        userID: userID
+                    )
+                }
+
+            } else {
+
+                ContentUnavailableView(
+                    "Assignment Not Available",
+                    systemImage: "doc.text.magnifyingglass",
+                    description: Text(
+                        viewModel.errorMessage ?? "Assignment not found."
+                    )
+                )
             }
         }
-        .navigationTitle("Details")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button("Edit", systemImage: "pencil") { showingEdit = true }
-                    Button("Delete", systemImage: "trash", role: .destructive) { showingDeleteAlert = true }
-                } label: { Image(systemName: "ellipsis") }
-            }
+        .navigationTitle("Assignment Details")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+
+            viewModel.load(
+                assignment: selectedAssignment,
+                context: context,
+                userID: userID
+            )
         }
-        .sheet(isPresented: $showingEdit) { EditAssignmentView(assignment: assignment) }
-        .alert("Delete assignment?", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
-                context.delete(assignment)
-                try? context.save()
-                dismiss()
-            }
-        } message: { Text("This action cannot be undone.") }
     }
 }

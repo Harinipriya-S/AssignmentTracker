@@ -23,19 +23,30 @@ final class EditAssignmentViewModel: ObservableObject {
         status = assignment.status
     }
 
-    func save(assignment: Assignment, context: ModelContext) -> Bool {
+    func save(assignment: Assignment, context: ModelContext, userID: String) -> Bool {
+        guard assignment.userID == userID else {
+            errorMessage = "You cannot edit another user's assignment."
+            return false
+        }
         guard FormValidator.isValid(title: title, faculty: faculty, marks: marks) else {
             errorMessage = "Enter a title and faculty name. Marks must be between 0 and 100."
             return false
         }
+
         assignment.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
         assignment.subject = subject
-        assignment.faculty = faculty
+        assignment.faculty = faculty.trimmingCharacters(in: .whitespacesAndNewlines)
         assignment.dueDate = dueDate
         assignment.marks = marks
         assignment.notes = notes
         assignment.status = status
-        do { try context.save(); return true }
-        catch { errorMessage = error.localizedDescription; return false }
+
+        do {
+            try AssignmentStorageService(context: context, userID: userID).save(assignment)
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
     }
 }

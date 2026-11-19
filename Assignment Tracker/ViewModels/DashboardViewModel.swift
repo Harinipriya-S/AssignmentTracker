@@ -11,9 +11,9 @@ final class DashboardViewModel: ObservableObject {
         AssignmentSummary.make(from: assignments)
     }
 
-    func load(context: ModelContext) {
-        storage = AssignmentStorageService(context: context)
-        assignments = storage?.assignments() ?? []
+    func load(context: ModelContext, userID: String) {
+        storage = AssignmentStorageService(context: context, userID: userID)
+        refresh()
     }
 
     func refresh() {

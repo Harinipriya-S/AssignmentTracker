@@ -1,17 +1,20 @@
 import SwiftUI
+import SwiftData
 
 struct AppRootView: View {
+    @Environment(\.modelContext) private var modelContext
     @StateObject private var coordinator = AppCoordinator()
     @StateObject private var authViewModel = AuthenticationViewModel()
 
     var body: some View {
         Group {
-            if authViewModel.isAuthenticated {
+            if let user = authViewModel.currentUser {
                 TabView(selection: $coordinator.selectedTab) {
-                    DashboardView()
+                    DashboardView(user: user, onSignOut: authViewModel.signOut)
                         .tabItem { Label("Dashboard", systemImage: "house") }
                         .tag(0)
-                    AssignmentListView()
+
+                    AssignmentListView(userID: user.id)
                         .tabItem { Label("Assignments", systemImage: "list.bullet") }
                         .tag(1)
                 }
@@ -19,6 +22,9 @@ struct AppRootView: View {
             } else {
                 LoginView(viewModel: authViewModel)
             }
+        }
+        .onAppear {
+            authViewModel.configure(context: modelContext)
         }
         .animation(.easeInOut, value: authViewModel.isAuthenticated)
     }

@@ -3,11 +3,16 @@ import SwiftData
 
 @Model
 final class User {
-    var username: String
+    @Attribute(.unique) var id: String
+    @Attribute(.unique) var username: String
     var passwordHash: String
     var createdAt: Date
 
-    init(username: String, passwordHash: String, createdAt: Date = .now) {
+    init(id: String = UUID().uuidString,
+         username: String,
+         passwordHash: String,
+         createdAt: Date = .now) {
+        self.id = id
         self.username = username
         self.passwordHash = passwordHash
         self.createdAt = createdAt

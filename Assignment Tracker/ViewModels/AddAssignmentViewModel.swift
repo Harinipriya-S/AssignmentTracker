@@ -13,17 +13,24 @@ final class AddAssignmentViewModel: ObservableObject {
     @Published var status = AssignmentStatus.pending
     @Published var errorMessage: String?
 
-    func save(context: ModelContext) -> Bool {
+    func save(context: ModelContext, userID: String) -> Bool {
         guard FormValidator.isValid(title: title, faculty: faculty, marks: marks) else {
             errorMessage = "Enter a title and faculty name. Marks must be between 0 and 100."
             return false
         }
+
         do {
-            try AssignmentStorageService(context: context).add(
-                Assignment(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-                           subject: subject, faculty: faculty, dueDate: dueDate,
-                           marks: marks, notes: notes, status: status)
+            let assignment = Assignment(
+                title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                subject: subject,
+                faculty: faculty.trimmingCharacters(in: .whitespacesAndNewlines),
+                dueDate: dueDate,
+                marks: marks,
+                notes: notes,
+                status: status,
+                userID: userID
             )
+            try AssignmentStorageService(context: context, userID: userID).add(assignment)
             return true
         } catch {
             errorMessage = error.localizedDescription
