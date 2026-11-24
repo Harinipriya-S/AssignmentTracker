@@ -29,7 +29,10 @@ struct AssignmentListView: View {
 
                 ForEach(viewModel.visibleAssignments) { assignment in
                     NavigationLink {
-                        AssignmentDetailView(selectedAssignment: assignment, userID: userID)
+                        AssignmentDetailView(
+                            assignment: assignment,
+                            userID: userID
+                        )
                     } label: {
                         AssignmentRowView(assignment: assignment)
                     }

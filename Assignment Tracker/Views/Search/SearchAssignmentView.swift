@@ -31,13 +31,11 @@ struct SearchAssignmentView: View {
 
                 NavigationLink {
                     AssignmentDetailView(
-                        selectedAssignment: assignment,
+                        assignment: assignment,
                         userID: userID
                     )
                 } label: {
-                    AssignmentRowView(
-                        assignment: assignment
-                    )
+                    AssignmentRowView(assignment: assignment)
                 }
             }
             .overlay {

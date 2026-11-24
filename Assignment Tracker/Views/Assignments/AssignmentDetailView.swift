@@ -4,125 +4,214 @@ import SwiftData
 
 struct AssignmentDetailView: View {
 
-    let selectedAssignment: Assignment
-    let userID: String
-
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var viewModel = AssignmentDetailViewModel()
-    @State private var showEditView = false
+    let assignment: Assignment
+    let userID: String
+
+    @State private var showEditSheet = false
+    @State private var showDeleteAlert = false
 
     var body: some View {
 
-        Group {
+        ScrollView {
 
-            if let assignment = viewModel.assignment {
+            VStack(alignment: .leading, spacing: 28) {
 
-                Form {
+                // Assignment Information
+                VStack(alignment: .leading, spacing: 12) {
 
-                    Section("Assignment Information") {
+                    Text("Assignment Information")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
 
-                        LabeledContent("Title") {
-                            Text(assignment.title)
-                        }
+                    VStack(spacing: 0) {
 
-                        LabeledContent("Subject") {
-                            Text(String(describing: assignment.subject))
-                        }
+                        detailRow(
+                            title: "Title",
+                            value: assignment.title
+                        )
 
-                        LabeledContent("Faculty") {
-                            Text(assignment.faculty)
-                        }
+                        Divider()
 
-                        LabeledContent("Due Date") {
-                            Text(
-                                assignment.dueDate.formatted(
-                                    date: .abbreviated,
-                                    time: .omitted
-                                )
+                        detailRow(
+                            title: "Subject",
+                            value: assignment.subject
+                        )
+
+                        Divider()
+
+                        detailRow(
+                            title: "Faculty",
+                            value: assignment.faculty
+                        )
+
+                        Divider()
+
+                        detailRow(
+                            title: "Due Date",
+                            value: assignment.dueDate.formatted(
+                                date: .abbreviated,
+                                time: .omitted
                             )
-                        }
+                        )
                     }
+                    .padding(.horizontal, 16)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                }
 
-                    Section("Submission Details") {
+                // Submission Details
+                VStack(alignment: .leading, spacing: 12) {
 
-                        LabeledContent("Marks") {
-                            Text(String(describing: assignment.marks))
+                    Text("Submission Details")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
+
+                    VStack(spacing: 0) {
+
+                        detailRow(
+                            title: "Marks",
+                            value: "\(assignment.marks)"
+                        )
+
+                        Divider()
+
+                        HStack {
+                            Text("Status")
+                                .foregroundStyle(.primary)
+
+                            Spacer()
+
+                            Text(assignment.status.rawValue.capitalized)
+                                .foregroundStyle(.secondary)
                         }
+                        .padding(.vertical, 18)
 
-                        LabeledContent("Status") {
-                            Text(String(describing: assignment.status))
-                        }
+                        Divider()
 
-                        LabeledContent("Notes") {
-                            Text(
-                                assignment.notes.isEmpty
+                        detailRow(
+                            title: "Notes",
+                            value: assignment.notes.isEmpty
                                 ? "No notes added"
                                 : assignment.notes
-                            )
-                        }
+                        )
                     }
-
-                    Section {
-
-                        Button(role: .destructive) {
-
-                            viewModel.deleteAssignment()
-                            dismiss()
-
-                        } label: {
-
-                            Label(
-                                "Delete Assignment",
-                                systemImage: "trash"
-                            )
-                        }
-                    }
-                }
-                .toolbar {
-
-                    ToolbarItem(placement: .topBarTrailing) {
-
-                        Button {
-
-                            showEditView = true
-
-                        } label: {
-
-                            Text("Edit")
-                                .fontWeight(.semibold)
-                        }
-                    }
-                }
-                .sheet(isPresented: $showEditView) {
-
-                    EditAssignmentView(
-                        assignment: assignment,
-                        userID: userID
-                    )
+                    .padding(.horizontal, 16)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
                 }
 
-            } else {
+                // Edit Assignment Button
+                Button {
+                    showEditSheet = true
+                } label: {
 
-                ContentUnavailableView(
-                    "Assignment Not Available",
-                    systemImage: "doc.text.magnifyingglass",
-                    description: Text(
-                        viewModel.errorMessage ?? "Assignment not found."
-                    )
-                )
+                    HStack {
+                        Image(systemName: "pencil")
+                            .font(.title3)
+
+                        Text("Edit Assignment")
+                            .font(.headline)
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                    }
+                    .foregroundStyle(.blue)
+                    .padding(20)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                }
+
+                // Delete Assignment Button
+                Button(role: .destructive) {
+                    showDeleteAlert = true
+                } label: {
+
+                    HStack {
+                        Image(systemName: "trash")
+                            .font(.title2)
+
+                        Text("Delete Assignment")
+                            .font(.headline)
+
+                        Spacer()
+                    }
+                    .foregroundStyle(.red)
+                    .padding(20)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                }
             }
+            .padding(20)
         }
+        .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("Assignment Details")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
 
-            viewModel.load(
-                assignment: selectedAssignment,
-                context: context,
+        // Edit Sheet
+        .sheet(isPresented: $showEditSheet) {
+            EditAssignmentView(
+                assignment: assignment,
                 userID: userID
             )
+        }
+
+        // Delete Confirmation
+        .alert(
+            "Delete Assignment?",
+            isPresented: $showDeleteAlert
+        ) {
+
+            Button("Cancel", role: .cancel) { }
+
+            Button("Delete", role: .destructive) {
+                deleteAssignment()
+            }
+
+        } message: {
+            Text("Are you sure you want to delete this assignment?")
+        }
+    }
+
+    // Reusable detail row
+    private func detailRow(
+        title: String,
+        value: String
+    ) -> some View {
+
+        HStack(alignment: .top) {
+
+            Text(title)
+                .foregroundStyle(.primary)
+
+            Spacer()
+
+            Text(value)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.trailing)
+        }
+        .padding(.vertical, 18)
+    }
+
+    // Delete assignment
+    private func deleteAssignment() {
+
+        guard assignment.userID == userID else {
+            return
+        }
+
+        context.delete(assignment)
+
+        do {
+            try context.save()
+            dismiss()
+        } catch {
+            print("Unable to delete assignment: \(error)")
         }
     }
 }
