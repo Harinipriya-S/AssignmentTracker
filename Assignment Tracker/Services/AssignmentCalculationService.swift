@@ -9,3 +9,4 @@ struct AssignmentCalculationService {
         assignments.filter { $0.status == status }.count
     }
 }
+I need tops the project in GitHub from initial and I also need to change the username and email in the keychain access

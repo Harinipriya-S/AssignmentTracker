@@ -9,3 +9,4 @@ extension Date {
         formatted(date: .abbreviated, time: .shortened)
     }
 }
+
